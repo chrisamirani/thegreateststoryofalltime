@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- 
+    This is the main Handlebars template for the site 
+    - When the user visits the homepage or submits a choice the app calls the endpoints in server.js
+    - The server script passes data in here and the Handlebars code builds it into the HTML page
+  -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>The Greatest Story of All Time</title>
+
+ 
+
+  <!-- Import the webpage's stylesheet -->
+  <link rel="stylesheet" href="/style.css" />
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HJEET13H8L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-HJEET13H8L');
+</script>
+
+</head>
+
+<body>
+  
+  <div class="wrapper">
+    
+    <div class="content" role="main">
+      <h2>
+    The Greatest Story of All Time
+  </h2>
+<p id="story">
+  <%= paragraph %>
+      </p>
+      <form method="POST" enctype="application/x-www-form-urlencoded" accept="/">
+      <textarea minlength="10" required maxlength="250" rows="3" name="sentence" placeholder="Write your part of the story here ..."></textarea>
+      <button class="btn--remix" type="submit">Submit Your Part</button>
+    </form>
+    </div>
+  </div>
+  <!-- The footer holds our remix button — you can use it for structure or cut it out ✂ -->
+  <footer class="footer">
+    <div class="links"></div>
+    <p style="font-size: 0.5rem;">
+      2021 | All rights reserved | The Greatest Story of All Time
+    </p>
+  </footer>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+      const socket = io();
+      
+      let form = document.querySelector("form")
+      let story = document.querySelector("#story")
+      socket.on("add", (arg) => {
+        story.textContent = story.textContent + arg
+        
+});
+      if(localStorage.getItem('history')){
+        form.innerHTML = ""
+      }
+      form.addEventListener("submit",(f)=>{
+        f.preventDefault()
+          if(!localStorage.getItem('history')){
+          let myStorage = window.localStorage;
+          let textarea = document.querySelector("textarea").value
+          fetch("/",{
+              method:"POST",
+              headers: {'Content-Type': 'application/json'},
+              body:JSON.stringify({sentence:textarea})
+            
+            }).then(async done=>{
+                let msg = await done.json()
+
+                if(msg.message == "done"){
+
+                    
+                    form.innerHTML = "<h2>Thanks for the contribution</h2>"
+                    localStorage.setItem('history', 'done');
+                    socket.emit("append", textarea);
+                }
+            })
+        }
+      })
+  </script>
+</body>
+
+</html>
